@@ -31,17 +31,38 @@ const ContactPage = () => {
     setIsSubmitting(true);
     
     setTimeout(() => {
-      const results = sessionStorage.getItem('testResults');
+      const resultsJson = sessionStorage.getItem('testResults');
+      const results = resultsJson ? JSON.parse(resultsJson) : null;
       
-      // В реальном приложении здесь должен быть отправка данных на сервер через API
-      // например с использованием fetch или axios
-      console.log({
+      if (!results) {
+        toast({
+          title: "Ошибка",
+          description: "Результаты теста не найдены",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Создаем объект с данными пользователя и результатами теста
+      const userData = {
+        id: Date.now().toString(),
         firstName,
         middleName,
         phone,
         date: new Date().toISOString().slice(0, 10),
-        results: results ? JSON.parse(results) : null
-      });
+        resultType: results.resultType,
+        optionCounts: results.optionCounts
+      };
+      
+      // Сохраняем в localStorage для доступа из админ-панели
+      const existingData = localStorage.getItem('userSubmissions');
+      const submissions = existingData ? JSON.parse(existingData) : [];
+      submissions.push(userData);
+      localStorage.setItem('userSubmissions', JSON.stringify(submissions));
+      
+      // В реальном приложении здесь должен быть API-запрос к серверу
+      console.log("Отправлены данные:", userData);
       
       toast({
         title: "Данные отправлены",
@@ -49,7 +70,7 @@ const ContactPage = () => {
         duration: 5000
       });
       
-      // Clear all data
+      // Clear test results
       sessionStorage.removeItem('testResults');
       
       setIsSubmitting(false);

@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
-// В реальном приложении данные должны загружаться с сервера
+// Интерфейс для пользовательских данных
 interface UserSubmission {
   id: string;
   date: string;
@@ -34,7 +34,7 @@ const resultTypeNames = [
   "Капельница ЭНЕРГИЯ"
 ];
 
-// Имитация данных клиентов
+// Имитация данных клиентов (используются только если нет данных в localStorage)
 const mockData: UserSubmission[] = [
   {
     id: "1",
@@ -78,11 +78,18 @@ const AdminPanel = () => {
   const adminPassword = "admin123";
 
   useEffect(() => {
-    // Имитация загрузки данных с сервера
-    // В реальном приложении здесь должен быть API-запрос
+    // Получаем данные из localStorage
     if (isAuthorized) {
-      setSubmissions(mockData);
-      setFilteredSubmissions(mockData);
+      const storedData = localStorage.getItem('userSubmissions');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setSubmissions(parsedData);
+        setFilteredSubmissions(parsedData);
+      } else {
+        // Если в localStorage нет данных, используем тестовые
+        setSubmissions(mockData);
+        setFilteredSubmissions(mockData);
+      }
     }
   }, [isAuthorized]);
 
@@ -157,6 +164,20 @@ const AdminPanel = () => {
     });
   };
 
+  // Очистка всех данных
+  const clearAllData = () => {
+    if (confirm("Вы уверены, что хотите удалить все данные? Это действие нельзя отменить.")) {
+      localStorage.removeItem('userSubmissions');
+      setSubmissions([]);
+      setFilteredSubmissions([]);
+      
+      toast({
+        title: "Данные удалены",
+        description: "Все записи были успешно удалены"
+      });
+    }
+  };
+
   if (!isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 p-4">
@@ -205,6 +226,9 @@ const AdminPanel = () => {
             </Button>
             <Button variant="default" onClick={exportToCSV}>
               Экспорт в CSV
+            </Button>
+            <Button variant="destructive" onClick={clearAllData}>
+              Очистить данные
             </Button>
           </div>
         </div>
@@ -256,31 +280,40 @@ const AdminPanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSubmissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell>{submission.date}</TableCell>
-                    <TableCell className="font-medium">{submission.firstName}</TableCell>
-                    <TableCell>{submission.middleName || "—"}</TableCell>
-                    <TableCell>{submission.phone}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          submission.resultType === 0 ? "default" :
-                          submission.resultType === 1 ? "secondary" : "outline"
-                        }
-                      >
-                        {resultTypeNames[submission.resultType]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 text-xs">
-                        <span>Д: {submission.optionCounts[0]}</span>
-                        <span>В: {submission.optionCounts[1]}</span>
-                        <span>Э: {submission.optionCounts[2]}</span>
-                      </div>
+                {filteredSubmissions.length > 0 ? (
+                  filteredSubmissions.map((submission) => (
+                    <TableRow key={submission.id}>
+                      <TableCell>{submission.date}</TableCell>
+                      <TableCell className="font-medium">{submission.firstName}</TableCell>
+                      <TableCell>{submission.middleName || "—"}</TableCell>
+                      <TableCell>{submission.phone}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            submission.resultType === 0 ? "default" :
+                            submission.resultType === 1 ? "secondary" : "outline"
+                          }
+                        >
+                          {resultTypeNames[submission.resultType]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 text-xs">
+                          <span>Д: {submission.optionCounts[0]}</span>
+                          <span>В: {submission.optionCounts[1]}</span>
+                          <span>Э: {submission.optionCounts[2]}</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-6">
+                      <p className="text-muted-foreground">Нет данных для отображения</p>
+                      <p className="text-sm mt-2">Когда пользователи пройдут тест и оставят свои данные, они появятся здесь</p>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
