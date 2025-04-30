@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Question {
   id: number;
@@ -116,6 +118,8 @@ const questions: Question[] = [
 ];
 
 const TestPage = () => {
+  const [consentDialogOpen, setConsentDialogOpen] = useState(true);
+  const [consentGiven, setConsentGiven] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -129,7 +133,7 @@ const TestPage = () => {
     
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedOption(null);
+      setSelectedOption(null); // Очищаем выбор при переходе к следующему вопросу
     } else {
       // Calculate results
       const optionCounts = [0, 0, 0];
@@ -154,66 +158,117 @@ const TestPage = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
       const newAnswers = [...answers];
-      newAnswers.pop();
+      const prevAnswer = newAnswers.pop();
       setAnswers(newAnswers);
-      setSelectedOption(null);
+      setSelectedOption(prevAnswer !== undefined ? prevAnswer : null);
+    }
+  };
+
+  // Обработчик согласия на обработку данных
+  const handleConsent = () => {
+    setConsentGiven(true);
+    setConsentDialogOpen(false);
+  };
+
+  // Если пользователь не дал согласие и пытается закрыть диалог, перенаправляем на главную
+  const handleConsentClose = () => {
+    if (!consentGiven) {
+      navigate("/");
+    } else {
+      setConsentDialogOpen(false);
     }
   };
 
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
+  if (!consentGiven && !consentDialogOpen) {
+    navigate("/");
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-purple-50 p-4">
-      <Card className="w-full max-w-lg shadow-lg">
-        <CardHeader>
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">
-              Вопрос {currentQuestion + 1} из {questions.length}
-            </span>
-            <span className="text-sm font-medium">
-              {Math.round(progress)}%
-            </span>
+    <>
+      <Dialog open={consentDialogOpen} onOpenChange={setConsentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Согласие на обработку персональных данных</DialogTitle>
+            <DialogDescription>
+              Для продолжения теста необходимо дать согласие на обработку персональных данных.
+              Мы обрабатываем ваши данные в соответствии с законодательством РФ.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 my-4">
+            <Checkbox id="terms" onCheckedChange={(checked) => setConsentGiven(checked === true)} />
+            <label
+              htmlFor="terms"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Я даю согласие на обработку персональных данных
+            </label>
           </div>
-          <Progress value={progress} className="h-2" />
-          <CardTitle className="mt-4 text-xl">{question.text}</CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <RadioGroup
-            value={selectedOption?.toString()}
-            onValueChange={(value) => setSelectedOption(parseInt(value))}
-            className="space-y-3"
-          >
-            {question.options.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-3 rounded-md border hover:bg-muted/50 transition-colors">
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </CardContent>
-        
-        <CardFooter className="flex justify-between pt-6">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentQuestion === 0}
-          >
-            Назад
-          </Button>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => navigate("/")}>
+              Отмена
+            </Button>
+            <Button type="button" onClick={handleConsent} disabled={!consentGiven}>
+              Продолжить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-purple-50 p-4">
+        <Card className="w-full max-w-lg shadow-lg">
+          <CardHeader>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-muted-foreground">
+                Вопрос {currentQuestion + 1} из {questions.length}
+              </span>
+              <span className="text-sm font-medium">
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <Progress value={progress} className="h-2" />
+            <CardTitle className="mt-4 text-xl">{question.text}</CardTitle>
+          </CardHeader>
           
-          <Button 
-            onClick={handleNext}
-            disabled={selectedOption === null}
-          >
-            {currentQuestion < questions.length - 1 ? "Далее" : "Завершить"}
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+          <CardContent>
+            <RadioGroup
+              value={selectedOption !== null ? selectedOption.toString() : undefined}
+              onValueChange={(value) => setSelectedOption(parseInt(value))}
+              className="space-y-3"
+            >
+              {question.options.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2 p-3 rounded-md border hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentQuestion === 0}
+            >
+              Назад
+            </Button>
+            
+            <Button 
+              onClick={handleNext}
+              disabled={selectedOption === null}
+            >
+              {currentQuestion < questions.length - 1 ? "Далее" : "Завершить"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </>
   );
 };
 

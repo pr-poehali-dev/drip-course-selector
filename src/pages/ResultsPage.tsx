@@ -19,7 +19,8 @@ const resultTypes = [
       "Укрепление иммунитета",
       "Снижение воспалительных процессов"
     ],
-    analyses: "АЛТ, АСТ, гамма-ГТП, креатинин, лактат, общий белок, СРБ-ультра, билирубин прямой и непрямой."
+    analyses: "АЛТ, АСТ, гамма-ГТП, креатинин, лактат, общий белок, СРБ-ультра, билирубин прямой и непрямой.",
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80"
   },
   {
     title: "Капельница СНИЖЕНИЕ ВЕСА",
@@ -30,7 +31,8 @@ const resultTypes = [
       "Расщепление жировых отложений",
       "Повышение эффективности тренировок"
     ],
-    analyses: "ОАК, глюкоза, АЛТ, АСТ, Липидный профиль."
+    analyses: "ОАК, глюкоза, АЛТ, АСТ, Липидный профиль.",
+    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
   },
   {
     title: "Капельница ЭНЕРГИЯ",
@@ -41,7 +43,8 @@ const resultTypes = [
       "Борьба с хронической усталостью",
       "Нормализация сна"
     ],
-    analyses: "ОАК, ферритин, В12, лактат, СРБ-ультра, КНТЖ, ОЖСС, общий белок."
+    analyses: "ОАК, ферритин, В12, лактат, СРБ-ультра, КНТЖ, ОЖСС, общий белок.",
+    image: "https://images.unsplash.com/photo-1551818255-e6e10975bc17?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1073&q=80"
   }
 ];
 
@@ -72,6 +75,10 @@ const ResultsPage = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-purple-50 p-4">
       <Card className="w-full max-w-2xl shadow-lg animate-fade-in">
         <CardHeader className="text-center pb-2">
+          <div 
+            className="w-full h-48 mb-6 rounded-t-lg bg-cover bg-center" 
+            style={{ backgroundImage: `url(${resultData.image})` }}
+          ></div>
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             {results.resultType === 0 ? (
               <span className="text-2xl">🧪</span>
