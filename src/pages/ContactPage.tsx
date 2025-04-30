@@ -33,11 +33,13 @@ const ContactPage = () => {
     setTimeout(() => {
       const results = sessionStorage.getItem('testResults');
       
-      // Here you would normally send data to server
+      // В реальном приложении здесь должен быть отправка данных на сервер через API
+      // например с использованием fetch или axios
       console.log({
         firstName,
         middleName,
         phone,
+        date: new Date().toISOString().slice(0, 10),
         results: results ? JSON.parse(results) : null
       });
       
